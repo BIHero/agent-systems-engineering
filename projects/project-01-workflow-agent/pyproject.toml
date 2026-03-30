@@ -1,0 +1,13 @@
+[project]
+name = "document-analysis-agent"
+version = "0.1.0"
+description = "A disciplined single-agent document analysis workflow."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2,<3",
+]
+
+[tool.uv]
+package = false
+
