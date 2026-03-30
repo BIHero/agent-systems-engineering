@@ -5,6 +5,7 @@ description = "A disciplined single-agent document analysis workflow."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "openai>=2.30.0",
     "pydantic>=2,<3",
 ]
 
