@@ -9,8 +9,8 @@ class LLMProviderError(Exception):
     """Raised when a provider call fails or returns unusable output."""
 
 
-def call_openai_provider(prompt: str) -> dict[str, Any]:
-    """Call the OpenAI API with a given prompt and return the response as a dict."""
+def call_openai_provider(prompt: str) -> str:
+    """Call the OpenAI API with a given prompt and return the response as a string."""
     
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -23,9 +23,22 @@ def call_openai_provider(prompt: str) -> dict[str, Any]:
             model="gpt-5.4",
             input= prompt,
         )
-        return response.output[0].content[0].text
-    except Exception as e:
-        raise LLMProviderError(f"OpenAI provider call failed: {e}") from e
+
+        if not response.output:
+            raise LLMProviderError("OpenAI response is missing 'output' field.")
+        
+        first_output = response.output[0]
+        if not first_output.content:
+            raise LLMProviderError("OpenAI response output is missing 'content' field.")
+        
+        first_content = first_output.content[0]
+        text = getattr(first_content, "text", None)
+        if not text:
+            raise LLMProviderError("OpenAI response content is missing 'text' field.")
+
+        return text
+    except Exception as exc:
+        raise LLMProviderError(f"OpenAI provider call failed: {exc}") from exc
     
 
 def call_demo_provider(_: str) -> dict[str, object]:

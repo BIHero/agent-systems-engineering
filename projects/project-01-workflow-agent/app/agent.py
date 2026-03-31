@@ -11,6 +11,31 @@ from pydantic import ValidationError
 from .prompts import build_analysis_prompt
 from .schemas import DocumentAnalysis
 
+import re
+
+
+import json
+import re
+from typing import Any
+from collections.abc import Callable, Mapping
+
+from pydantic import ValidationError
+
+from .prompts import build_analysis_prompt
+from .schemas import DocumentAnalysis
+
+
+def _extract_json_from_text(text: str) -> dict:
+    """Extract the first JSON object from a string."""
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        return json.loads(match.group())
+
+    array_match = re.search(r"\[.*\]", text, re.DOTALL)
+    if array_match:
+        raise TypeError("Received JSON array but expected object.")
+
+    raise json.JSONDecodeError("No JSON object found", text, 0)
 
 LLMCallable = Callable[[str], Any]
 
@@ -56,7 +81,10 @@ def _parse_document_analysis(raw_response: Any) -> DocumentAnalysis:
         return raw_response
 
     if isinstance(raw_response, str):
-        payload = json.loads(raw_response)
+        try:
+            payload = json.loads(raw_response)
+        except json.JSONDecodeError:
+            payload = _extract_json_from_text(raw_response)
     elif isinstance(raw_response, Mapping):
         payload = dict(raw_response)
     else:

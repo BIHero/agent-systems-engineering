@@ -34,6 +34,17 @@ def invalid_missing_field_llm(_: str) -> dict[str, object]:
         "summary": "Only summary",
     }
 
+def wrapped_json_llm(_: str) -> str:
+    """Return valid JSON wrapped in extra commentary."""
+    return (
+        'Here is the analysis:\n\n'
+        '{"summary":"Summary",'
+        '"key_points":["Point one"],'
+        '"action_items":["Do the thing"],'
+        '"open_questions":["What is missing?"],'
+        '"completeness_note":"Good enough."}'
+    )
+
 
 def invalid_wrong_type_llm(_: str) -> dict[str, object]:
     """Return a payload with an invalid field type."""
@@ -115,7 +126,15 @@ class DocumentAnalysisAgentTests(unittest.TestCase):
         with self.assertRaises(OutputValidationError):
             analyze_document("Useful document text.", llm_call=malformed_json_llm)
 
-    
+    def test_wrapped_json_response_is_accepted(self) -> None:
+        result = analyze_document("Useful document text.", llm_call=wrapped_json_llm)
+
+        self.assertIsInstance(result, DocumentAnalysis)
+        self.assertEqual(result.summary, "Summary")
+        self.assertEqual(result.key_points, ["Point one"])
+        self.assertEqual(result.action_items, ["Do the thing"])
+        self.assertEqual(result.open_questions, ["What is missing?"])
+        self.assertEqual(result.completeness_note, "Good enough.")
 
 if __name__ == "__main__":
     unittest.main()
